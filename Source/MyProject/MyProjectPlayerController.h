@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "maps/HexGrid.h"
 #include "MyProjectPlayerController.generated.h"
 
 UCLASS()
@@ -15,12 +16,15 @@ public:
 	AMyProjectPlayerController();
 
 protected:
+	AHexGrid *map;
+	virtual void BeginPlay() override;
 	/** True if the controlled character should navigate to the mouse cursor. */
 	uint32 bMoveToMouseCursor : 1;
 
 	// Begin PlayerController interface
 	virtual void PlayerTick(float DeltaTime) override;
 	virtual void SetupInputComponent() override;
+	virtual void Tick(float DelatTime)override;
 	// End PlayerController interface
 
 	/** Resets HMD orientation in VR. */

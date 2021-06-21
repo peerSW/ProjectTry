@@ -5,6 +5,7 @@
 #include "Runtime/Engine/Classes/Components/DecalComponent.h"
 #include "HeadMountedDisplayFunctionLibrary.h"
 #include "MyProjectCharacter.h"
+#include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
 
 AMyProjectPlayerController::AMyProjectPlayerController()
@@ -13,10 +14,32 @@ AMyProjectPlayerController::AMyProjectPlayerController()
 	DefaultMouseCursor = EMouseCursor::Crosshairs;
 }
 
+void AMyProjectPlayerController::BeginPlay()
+{
+	AActor* tempActor = UGameplayStatics::GetActorOfClass(GetWorld(),AHexGrid::StaticClass());
+	this->map = Cast<AHexGrid>(tempActor);
+}
+
+
+void AMyProjectPlayerController::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	FHitResult Hit;
+	GetHitResultUnderCursor(ECC_Visibility, false, Hit);
+
+	if (Hit.bBlockingHit)
+	{
+		// We hit something, move there
+		FVector cursorLoc = Hit.ImpactPoint;
+		map->moveTo(cursorLoc);
+	}
+	
+
+}
+
 void AMyProjectPlayerController::PlayerTick(float DeltaTime)
 {
 	Super::PlayerTick(DeltaTime);
-
 	// keep updating the destination every tick while desired
 	if (bMoveToMouseCursor)
 	{
@@ -52,7 +75,7 @@ void AMyProjectPlayerController::MoveToMouseCursor()
 		{
 			if (MyPawn->GetCursorToWorld())
 			{
-				UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, MyPawn->GetCursorToWorld()->GetComponentLocation());
+				UAIBlueprintHelperLibrary::SimpleMoveToLocation(this,map->getMeshLocation());
 			}
 		}
 	}
@@ -65,15 +88,15 @@ void AMyProjectPlayerController::MoveToMouseCursor()
 		if (Hit.bBlockingHit)
 		{
 			// We hit something, move there
-			SetNewMoveDestination(Hit.ImpactPoint);
+			//SetNewMoveDestination(Hit.ImpactPoint);
+			SetNewMoveDestination(map->getMeshLocation());
 		}
 	}
 }
 
 void AMyProjectPlayerController::MoveToTouchLocation(const ETouchIndex::Type FingerIndex, const FVector Location)
 {
-	FVector2D ScreenSpaceLocation(Location);
-
+	FVector2D ScreenSpaceLocation(Location);	
 	// Trace to see what is under the touch location
 	FHitResult HitResult;
 	GetHitResultAtScreenPosition(ScreenSpaceLocation, CurrentClickTraceChannel, true, HitResult);
